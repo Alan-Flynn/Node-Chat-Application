@@ -1,0 +1,67 @@
+<!-- Update the HTML structure with input fields and buttons -->
+<div>
+  <input id="roomInput" type="text" placeholder="Enter Room">
+  <input id="usernameInput" type="text" placeholder="Enter Username">
+  <button id="joinButton">Join Room</button>
+</div>
+
+<div>
+  <ul id="messages"></ul>
+</div>
+
+<div>
+  <form id="chatForm">
+    <input id="messageInput" type="text" placeholder="Type your message...">
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<!-- Add a container for displaying the online user list -->
+<div id="userList"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  // Join a room with a username
+  const joinButton = document.getElementById('joinButton');
+  joinButton.addEventListener('click', () => {
+    const roomInput = document.getElementById('roomInput');
+    const usernameInput = document.getElementById('usernameInput');
+    const room = roomInput.value;
+    const username = usernameInput.value;
+    socket.emit('join room', { room, username });
+  });
+
+  // Handle received user list updates
+  const userList = document.getElementById('userList');
+  socket.on('user list', (users) => {
+    userList.innerHTML = '';
+    users.forEach((user) => {
+      const listItem = document.createElement('li');
+      listItem.textContent = user;
+      userList.appendChild(listItem);
+    });
+  });
+
+  // Handle received chat messages
+  const messagesList = document.getElementById('messages');
+  socket.on('chat message', (data) => {
+    const { username, message } = data;
+    const listItem = document.createElement('li');
+    listItem.textContent = `${username}: ${message}`;
+    messagesList.appendChild(listItem);
+  });
+
+  // Send chat messages
+  const chatForm = document.getElementById('chatForm');
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const messageInput = document.getElementById('messageInput');
+    const message = messageInput.value;
+    const roomInput = document.getElementById('roomInput');
+    const room = roomInput.value;
+    socket.emit('chat message', { room, message });
+    messageInput.value = '';
+  });
+</script>
